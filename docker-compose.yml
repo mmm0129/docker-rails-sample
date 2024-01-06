@@ -1,0 +1,26 @@
+version: '3'
+volumes: 
+    data: #databaseのデータ永続化のため
+services:
+    web:
+        build: .
+        ports:
+            - '3000:3000' #アプリケーションの実行ポート指定　ホストPC(railsはdefaultだと3000):Dockerコンテナ
+        volumes:
+            - '.:/Affiliate_Site_ver1' #ローカルPCのプロジェクトフォルダをマウントすることで、ファイルの変更を同期させる。
+        environment:
+            - 'DATABASE_USER=${DATABASE_USER}' #環境変数（DBのユーザ名）
+            - 'DATABASE_USER_PASSWORD=${DATABASE_USER_PASSWORD}'  #環境変数（DBのパスワード）
+        depends_on: 
+            - db #dbコンテナを先に起動させるため。
+        command: bash -c "rm -f tmp/pids/server.pid && bundle exec rails s -p 3000 -b '0.0.0.0'"
+    db:
+        image: mysql:5.7
+        platform: linux/amd64
+        ports:
+            - '3306:3306'
+        volumes:
+            - 'data:/var/lib/mysql' #databaseのデータ永続化用volumeにマウントする
+        environment:
+            MYSQL_ROOT_PASSWORD: ${DATABASE_USER_PASSWORD}
+            TZ: Asia/Tokyo
